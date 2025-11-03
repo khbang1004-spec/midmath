@@ -1,0 +1,5 @@
+{
+  "name": "Copy of Middle School Math Specialty Generator",
+  "description": "An AI-powered tool for teachers to generate detailed student performance records for middle school mathematics, using Gemini 2.5 Pro.",
+  "requestFramePermissions": []
+}
