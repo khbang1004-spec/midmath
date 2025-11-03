@@ -280,24 +280,49 @@ const App: React.FC = () => {
             return;
         }
         
-        let achievementIndex = 0;
+        // 단원별로 성취기준을 그룹화
+        const achievementsByUnit = new Map<string, typeof availableAchievements>();
+        availableAchievements.forEach(ach => {
+            if (!achievementsByUnit.has(ach.unit)) {
+                achievementsByUnit.set(ach.unit, []);
+            }
+            achievementsByUnit.get(ach.unit)!.push(ach);
+        });
+        
+        const units = Array.from(achievementsByUnit.keys());
         const newStagedAchievements: AppState['stagedStudentAchievements'] = {};
+        
+        // 각 단원에서 순환하며 성취기준 배정
+        let unitIndex = 0;
+        const unitAchievementIndices = new Map<string, number>();
+        units.forEach(unit => unitAchievementIndices.set(unit, 0));
+        
         appState.students.forEach(student => {
             newStagedAchievements[student.id] = {};
             for (let i = 0; i < appState.achievementsPerStudent; i++) {
-                const code = availableAchievements[achievementIndex % availableAchievements.length].code;
-                newStagedAchievements[student.id][code] = 1;
-                achievementIndex++;
+                // 현재 단원 선택
+                const currentUnit = units[unitIndex % units.length];
+                const unitAchievements = achievementsByUnit.get(currentUnit)!;
+                const currentIndex = unitAchievementIndices.get(currentUnit)!;
+                
+                // 현재 단원에서 성취기준 가져오기
+                const achievement = unitAchievements[currentIndex % unitAchievements.length];
+                newStagedAchievements[student.id][achievement.code] = 1;
+                
+                // 인덱스 업데이트
+                unitAchievementIndices.set(currentUnit, currentIndex + 1);
+                unitIndex++;
             }
         });
+        
         setAppState(prev => ({...prev, stagedStudentAchievements: newStagedAchievements}));
-        showToast('성취기준이 자동으로 배정되었습니다.');
+        showToast('성취기준이 단원을 균형있게 배정되었습니다.');
     };
 
     // --- Step 4 Logic ---
     const fixedInclude = [
         '교사의 관찰자 시점에서 학생의 행동과 역량을 중심으로 서술함.',
-        '성취기준의 핵심 역량을 문장에 자연스럽게 녹여내어 서술함.',
+        '성취기준을 문장에 자연스럽게 녹여내어 서술함.',
         '문장 끝은 명사형 어미("-함", "-음", "-됨", "-임")로 종결하여 객관성을 유지함.',
         '구체적 관찰 사실과 행동 특성을 서술한 후, 그를 통해 드러나는 역량과 태도를 연결하여 작성함.',
         '학업역량(자기주도성, 탐구심), 인성(성실성, 책임감), 사회성(협력, 소통) 등 다양한 강점이 수학 교과와 관련하여 드러나도록 작성함.',
@@ -439,6 +464,7 @@ ${fixedExclude.map(item => `  - ${item}`).join('\n')}
                             <li><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 font-semibold underline hover:text-blue-800">Google AI Studio</a>에 접속하여 Google 계정으로 로그인합니다.</li>
                             <li>'API 키 만들기' 버튼을 클릭하여 새로운 키를 발급받습니다.</li>
                             <li>생성된 키를 복사하여 아래 입력창에 붙여넣어 주세요.</li>
+                            <li>키를 생성하기 위해 결제 수단을 설정해야합니다.(등록만 할 뿐, 유료로 사용하지 않습니다.)</li>
                         </ol>
                         <p className="text-xs text-gray-500 mt-4">※ API 키는 사용자의 브라우저(로컬 저장소)에만 저장되며, 외부 서버로 전송되지 않습니다.</p>
                     </div>
