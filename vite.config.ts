@@ -5,6 +5,11 @@ import react from '@vitejs/plugin-react';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      // Use relative paths in built `index.html` so the site works when served
+      // from a subpath (GitHub Pages project site) or from the repository root.
+      // Using './' makes asset URLs relative which avoids 404s for index.css / index.tsx
+      // when the site is served under a subpath like /midmath/.
+      base: mode === 'production' ? './' : '/',
       server: {
         port: 3000,
         host: '0.0.0.0',
